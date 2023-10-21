@@ -62,11 +62,29 @@ def cossimhist(vec1, vec_dict:dict, thresh=0.5):
     Designed to take a vector and a list of vectors. 
     Returns the n most similar vectors to the input one. 
     """
-    embeddings = vec_dict.values()
     n_vecs = []
-    for emb in embeddings:
-        cos_sim = np.dot(vec1, emb)/(np.linalg.norm(vec1)*np.linalg.norm(emb))
+
+    for key in vec_dict.keys():
+        cos_sim = np.dot(vec1, vec_dict[key])/(np.linalg.norm(vec1)*np.linalg.norm(vec_dict[key]))
         if cos_sim >= thresh:
-            n_vecs.append(emb)
+            n_vecs.append(key)
 
     return n_vecs
+
+#a function to retreive all the previous prompts from some history 
+def retreive_hist(inp:dict):
+    """
+    A function to retreive the entire chat history from an input dictionary.
+    Specific to the pipeline of the project.
+    """
+    vec_dict = {}
+    history = inp['history'] #a list of all prompt-answer pairs
+
+    for pair in history:
+        vec_dict[pair['prompt']] = pair['vectorized_prompt']
+
+    #chat history in the form of {prompt_text: embed(prompt), ...}
+    return vec_dict
+
+def retreive_answ(n_vecs:list, inp:dict):
+    pass

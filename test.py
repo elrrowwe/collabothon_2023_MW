@@ -6,7 +6,7 @@ from langchain.chains import LLMChain, ConversationChain
 import os
 from os.path import dirname, join 
 from dotenv import load_dotenv
-from vecdb import cossimhist
+from vecdb import cossimhist, retreive_hist 
 #W6hkUqzTQWcL6IVw
 
 #.env adjustments
@@ -57,13 +57,14 @@ class ChatbotWithHistory:
             },
             project_id=PROJECT_ID
         )
+
         self.chain = ConversationChain(llm=self.model.to_langchain(), prompt=self.prompt, verbose=True, memory=self.memory)
         inp = {
-    "new_prompt" : {
-        "prompt" : str,
-        "vectorized_prompt" : list(int(str)) #embedded str
-    },
-    "history" : [
+        "new_prompt" : {
+            "prompt" : str,
+            "vectorized_prompt" : list(int(str)) #embedded str
+        },
+        "history" : [
         {
             "prompt" : str,
             "vectorized_prompt" : list(int(str)), #embedded str
@@ -79,13 +80,13 @@ class ChatbotWithHistory:
 }
 
     #a function to get the model's response to some prompt + history 
-    def get_response(self, user_input:str, inp: dict):
+    def get_response(self, inp: dict):
+        prev_prompts = retreive_hist(inp)
         last_prompt = inp['new_prompt']['prompt'] #str of the last prompt
+        #running cosine similarity on the entire chat history to retreive the most relevant messages
+        relevant_hist = cossimhist(last_prompt, vec_dict=prev_prompts)
         
-        #running cosine similarity on the whole  
-
-        bot_response = self.llm_chain(human_input=prompt)
-        return bot_response
+        return 
 
 #executing the file 
 if __name__ == "__main__":
