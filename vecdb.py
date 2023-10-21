@@ -60,16 +60,16 @@ def cossimhist(vec1, vec_dict:dict, thresh=0.5):
     """
     A function to calculate cosine similarity between a vector and a list of vectors.
     Designed to take a vector and a list of vectors. 
-    Returns the n most similar vectors to the input one. 
+    Returns the n most similar vectors to the input one + answers to them. 
     """
-    n_vecs = []
+    n_prompts_answers = {}
 
-    for key in vec_dict.keys():
-        cos_sim = np.dot(vec1, vec_dict[key])/(np.linalg.norm(vec1)*np.linalg.norm(vec_dict[key]))
+    for key in vec_dict.keys(): 
+        cos_sim = np.dot(vec1, vec_dict[key][0])/(np.linalg.norm(vec1)*np.linalg.norm(vec_dict[key][0]))
         if cos_sim >= thresh:
-            n_vecs.append(key)
+            n_prompts_answers[key] = vec_dict[key][1]
 
-    return n_vecs
+    return n_prompts_answers
 
 #a function to retreive all the previous prompts from some history 
 def retreive_hist(inp:dict):
@@ -81,10 +81,6 @@ def retreive_hist(inp:dict):
     history = inp['history'] #a list of all prompt-answer pairs
 
     for pair in history:
-        vec_dict[pair['prompt']] = pair['vectorized_prompt']
+        vec_dict[pair['prompt']] = [pair['vectorized_prompt'], pair['answer']]
 
-    #chat history in the form of {prompt_text: embed(prompt), ...}
     return vec_dict
-
-def retreive_answ(n_vecs:list, inp:dict):
-    pass

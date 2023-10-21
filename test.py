@@ -15,13 +15,6 @@ load_dotenv(dotenv_path)
 API_TOKEN = os.environ.get("APIKEY")
 PROJECT_ID = os.environ.get("PROJECT_ID")
 
-#1) empty vec db
-#2) append the first prompt + response {str: vector}
-#3) before each next prompt + response is sent to the model, we run cosine similarity between the prompt and the database                    #500
-#4) pick as many similarities as possible before filling out the context window OR hardcode a restriction in prompt length (limit the user to n chars, the rest of the context window -- to be used for history)
-#5) after we pick the n top prompts + responses, pack them up into a prompt that says 'your last response to this prompt: prompt were such and such: response'
-#6) the model answers
-
 #chatbot class
 class ChatbotWithHistory:
     def __init__(self):
@@ -29,9 +22,9 @@ class ChatbotWithHistory:
         # self.template = 'Act as a helpful virtual psychology assistant that provides emotional support and friendly advice to children in a critical situation, situation of stress and trouble. You should provide the user with correct, guiding information. Upon receiving a prompt reply to the user immediately, without augmenting their prompt. DO NOT model a dialogue -- give them time to in turn reply to you. Assume that the prompt the user inputs is complete and there is no need for you to add anything to it. ===PROMPT START=== {userinput} ===PROMPT END==='
         
         self.template = """Act as a helpful virtual psychology assistant that provides emotional support and friendly advice to children in a critical situation, situation of stress and trouble. You should provide the user with correct, guiding information. Upon receiving a prompt reply to the user immediately, without augmenting their prompt. DO NOT model a dialogue -- give them time to in turn reply to you. Assume that the prompt the user inputs is complete and there is no need for you to add anything to it.
-        {chat_history}
-        Human: {human_input}
-        Chatbot:"""
+        Previous messages relevant to the current input: {chat_history}
+        Current input: {human_input}
+        Chatbot's response:"""
 
         self.prompt = PromptTemplate(
             input_variables=["chat_history", "human_input"], template=self.template
@@ -59,6 +52,7 @@ class ChatbotWithHistory:
         )
 
         self.chain = ConversationChain(llm=self.model.to_langchain(), prompt=self.prompt, verbose=True, memory=self.memory)
+
         inp = {
         "new_prompt" : {
             "prompt" : str,
@@ -79,18 +73,19 @@ class ChatbotWithHistory:
     ]
 }
 
-    #a function to get the model's response to some prompt + history 
+    #a method to get the model's response to some prompt + history 
     def get_response(self, inp: dict):
-        prev_prompts = retreive_hist(inp)
-        last_prompt = inp['new_prompt']['prompt'] #str of the last prompt
+        prev_prompts, prev_answers = retreive_hist(inp)
+        last_prompt = inp['new_prompt']['vectorized_prompt'] #str of the last prompt
         #running cosine similarity on the entire chat history to retreive the most relevant messages
-        relevant_hist = cossimhist(last_prompt, vec_dict=prev_prompts)
+        n_prompts_answers = cossimhist(last_prompt, vec_dict=prev_prompts)
         
-        return 
+        response = self.chain({'chat_history': n_prompts_answers, 'human_input': last_prompt})
+        return response
 
 #executing the file 
 if __name__ == "__main__":
     chatbot = ChatbotWithHistory()
 
-    response = chatbot('hey, my name is el. let`s talk')
+    response = chatbot.get_response('hey, my name is el. let`s talk')
     print(response)
