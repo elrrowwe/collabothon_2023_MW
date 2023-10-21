@@ -7,7 +7,7 @@ from langchain.memory import ConversationBufferMemory
 import os
 from os.path import dirname, join 
 from dotenv import load_dotenv
-from VecDB import cossimhist
+from VecDB import cossim, Embedder 
 
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
@@ -44,14 +44,20 @@ class NotesAnalyst():
         )
 
         self.chain = LLMChain(llm=self.model.to_langchain(), prompt=self.prompt, verbose=False)
+        self.embedder = Embedder()
 
     def analyze(self, note:str):
         analysis = self.chain(note)
 
         return analysis
     
-    def search(self, query:str):
-        
+    def search(self, query:str, notes:list, thresh=0.7):
+        query_embedded = self.embedder.get_embedding(query)
+
+        for n in notes:
+            cs = cossim(query_embedded, n)
+            if cs >= thresh:
+                pass
 
 if __name__ == '__main__':
     analyst  = NotesAnalyst()

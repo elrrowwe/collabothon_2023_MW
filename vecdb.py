@@ -12,16 +12,11 @@ OPENAI_API = os.environ.get("OPENAI_API")
 
 
 #the database class
-class VectorDatabase:
+class Embedder:
     def __init__(self):
-        # self.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
-
-        # self.embed_model = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=OPENAI_API)
-
         self.embed_model = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
 
-    def _get_embedding(self, text:str):
-        # embedding = self.embed_model.embed_query(text)
+    def get_embedding(self, text:str):
         embedding = self.embed_model.embed_query(text) 
           
         return embedding
@@ -43,11 +38,13 @@ def cossimhist(vec1, vec_dict:dict, thresh=0.5):
     return n_prompts_answers
 
 def cossim(vec1, vec2, thresh=0.5):
-    results = []
+    result = []
     cos_sim = np.dot(vec1, vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2))
 
     if cos_sim >= thresh:
-        
+        results.append(vec)
+    
+    return result
 
 #a function to retreive all the previous prompts from some history 
 def retreive_hist(inp:dict):
