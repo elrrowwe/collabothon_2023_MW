@@ -3,31 +3,29 @@ from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenP
 from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
 from langchain import PromptTemplate
 from langchain.chains import LLMChain, ConversationChain
+from langchain.memory import ConversationBufferMemory
 import os
 from os.path import dirname, join 
 from dotenv import load_dotenv
 from vecdb import cossimhist, retreive_hist 
-#W6hkUqzTQWcL6IVw
 
 #.env adjustments
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 API_TOKEN = os.environ.get("APIKEY")
 PROJECT_ID = os.environ.get("PROJECT_ID")
-
+SYSMSG = os.environ.get("SYSMSG")
 #chatbot class
 class ChatbotWithHistory:
     def __init__(self):
         # self.prompt = 'Act as a helpful virtual psychology assistant that provides emotional support and friendly advice to children in a critical situation, situation of stress and trouble. You should provide the user with correct, guiding information. Upon receiving a prompt reply to the user immediately, without augmenting their prompt. DO NOT model a dialogue -- give them time to in turn reply to you. Assume that the prompt the user inputs is complete and there is no need for you to add anything to it. ===PROMPT START=== {userinput} ===PROMPT END===\n'
         # self.template = 'Act as a helpful virtual psychology assistant that provides emotional support and friendly advice to children in a critical situation, situation of stress and trouble. You should provide the user with correct, guiding information. Upon receiving a prompt reply to the user immediately, without augmenting their prompt. DO NOT model a dialogue -- give them time to in turn reply to you. Assume that the prompt the user inputs is complete and there is no need for you to add anything to it. ===PROMPT START=== {userinput} ===PROMPT END==='
         
-        self.template = """Act as a helpful virtual psychology assistant that provides emotional support and friendly advice to children in a critical situation, situation of stress and trouble. You should provide the user with correct, guiding information. Upon receiving a prompt reply to the user immediately, without augmenting their prompt. DO NOT model a dialogue -- give them time to in turn reply to you. Assume that the prompt the user inputs is complete and there is no need for you to add anything to it.
-        Previous messages relevant to the current input: {chat_history}
-        Current input: {human_input}
-        Chatbot's response:"""
+        self.template = SYSMSG
 
         self.prompt = PromptTemplate(
-            input_variables=["chat_history", "human_input"], template=self.template
+            input_variables=["chat_history", "human_input"],
+            template=self.template
         )
 
         GenParams().get_example_values()
@@ -51,41 +49,41 @@ class ChatbotWithHistory:
             project_id=PROJECT_ID
         )
 
-        self.chain = ConversationChain(llm=self.model.to_langchain(), prompt=self.prompt, verbose=True, memory=self.memory)
+        self.memory = ConversationBufferMemory(
+            memory_key='chat_history',
+            input_key='human_input'
+        )
 
-        inp = {
-        "new_prompt" : {
-            "prompt" : str,
-            "vectorized_prompt" : list(int(str)) #embedded str
-        },
-        "history" : [
-        {
-            "prompt" : str,
-            "vectorized_prompt" : list(int(str)), #embedded str
-            "answer" : str
-        },
-        {
-            "prompt" : str,
-            "vectorized_prompt" : list(int(str)), #embedded str
-            "answer" : str
-        },
-        ...
-    ]
-}
+        self.chain = LLMChain(llm=self.model.to_langchain(), prompt=self.prompt, verbose=False, memory=self.memory)
 
     #a method to get the model's response to some prompt + history 
     def get_response(self, inp: dict):
-        prev_prompts, prev_answers = retreive_hist(inp)
-        last_prompt = inp['new_prompt']['vectorized_prompt'] #str of the last prompt
-        #running cosine similarity on the entire chat history to retreive the most relevant messages
-        n_prompts_answers = cossimhist(last_prompt, vec_dict=prev_prompts)
-        
-        response = self.chain({'chat_history': n_prompts_answers, 'human_input': last_prompt})
+        last_prompt_str = inp['new_prompt']['prompt']
+        last_prompt_emb = inp['new_prompt']['vectorized_prompt'] #str of the last prompt
+
+        #handling an empty database 
+        if len(inp['history']) != 0:
+            prev_prompts, prev_answers = retreive_hist(inp)
+            #running cosine similarity on the entire chat history to retreive the most relevant messages
+            n_prompts_answers = cossimhist(last_prompt_emb, vec_dict=prev_prompts)
+            
+            response = self.chain.predict({
+            "chat_history": n_prompts_answers,
+            "human_input": last_prompt_str})
+        else:
+            response = self.chain(last_prompt_str)
+
         return response
 
 #executing the file 
 if __name__ == "__main__":
     chatbot = ChatbotWithHistory()
+    inp = {'new_prompt': {
+        'prompt': 'hey, let`s talk',
+        'vectorized_prompt': None
+    },
+    'history': []
+    }
 
-    response = chatbot.get_response('hey, my name is el. let`s talk')
-    print(response)
+    response = chatbot.get_response(inp)
+    print(response['text'])
