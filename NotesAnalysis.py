@@ -56,11 +56,18 @@ class NotesAnalyst():
 
         for n in notes:
             cs = cossim(query_embedded, n)
+            print(cs)
             if cs >= thresh:
-                pass
+                return n 
+            
 
 if __name__ == '__main__':
     analyst  = NotesAnalyst()
     note = 'Today I felt quite happy. I talked to my friends at school and played with my big snow-white dog at home later. Mom cooked salmon for dinner and all of us (my parens, sister and me) ate at the table, while also talking about our day. It was nice.'
     analysis = analyst.analyze(note)
     print(analysis['text'])
+
+    notes = [note]
+
+    query = 'white dog'
+    n = analyst.search()
