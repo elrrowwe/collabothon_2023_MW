@@ -3,18 +3,24 @@ from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenP
 from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
 from langchain import PromptTemplate
 from langchain.chains import LLMChain, ConversationChain
-from langchain.memory import ConversationBufferMemory
-from langchain.agents import ZeroShotAgent, AgentExecutor, Tool, load_tools
-import pinecone
 import os
 from os.path import dirname, join 
 from dotenv import load_dotenv
+from vecdb import VectorDatabase 
 
-# .env adjustments
+
+#.env adjustments
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 API_TOKEN = os.environ.get("APIKEY")
 PROJECT_ID = os.environ.get("PROJECT_ID")
+
+#1) empty vec db
+#2) append the first prompt + response {str: vector}
+#3) before each next prompt + response is sent to the model, we run cosine similarity between the prompt and the database
+#4) pick as many similarities as possible before filling out the context window OR hardcode a restriction in prompt length  (limit the user to n chars, the rest of the context window -- to be used for history)
+#5) after we pick the n top prompts + responses, pack them up into a prompt that says 'your last response to this prompt: prompt were such and such: response'
+#6) the model answers
 
 #chatbot class
 class ChatbotWithHistory:
@@ -51,41 +57,19 @@ class ChatbotWithHistory:
             },
             project_id=PROJECT_ID
         )
-        #initializing langchain 
-        # self.llm_chain = LLMChain(llm=self.model.to_langchain(), prompt=PromptTemplate.from_template(self.prompt))
-        self.memory = ConversationBufferMemory()
         self.chain = ConversationChain(llm=self.model.to_langchain(), prompt=self.prompt, verbose=True, memory=self.memory)
-
-        #giving the model memory
-        # self.conversation = ConversationChain(
-        #     llm=self.llm_chain, 
-        #     verbose=True,
-        #     memory=ConversationBufferMemory())
-        # self.agent = ZeroShotAgent(llm_chain=self.llm_chain, verbose=True)
-        # self.agent_chain = AgentExecutor.from_agent_and_tools(agent=self.agent, verbose=True, memory=self.memory)
+        self.vdb = VectorDatabase() #initializing a vector db for model memory
 
     #a function to get the model's response to some prompt 
     def get_response(self, user_input):
-        # self.conversation_history += "Użytkownik: " + user_input + '\n'
-        # generated_response = self.model.generate(prompt=self.conversation_history)
-        # bot_response = generated_response['results'][0]['generated_text']
-        # self.conversation_history += "Chatbot: " + bot_response + '\n'
-
+        
         prompt = user_input
-        bot_response = self.llm_chain.predict(human_input=prompt)
+        bot_response = self.llm_chain(human_input=prompt)
         return bot_response
-
 
 #executing the file 
 if __name__ == "__main__":
     chatbot = ChatbotWithHistory()
 
-    #a continuous 'chat' loop
-    # while True:
-    #     user_message = input("Ty: ")
-    #     if user_message.lower() in ['exit', 'quit']:
-    #         break
-    #     response = chatbot.get_response(user_message)
-    #     print("Chatbot:", response)
     response = chatbot.get_response('hey, my name is el. let`s talk')
     print(response)
