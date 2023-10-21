@@ -69,4 +69,4 @@ def cossimhist(vec1, vec_dict:dict, thresh=0.5):
         if cos_sim >= thresh:
             n_vecs.append(emb)
 
-    return 
+    return n_vecs
