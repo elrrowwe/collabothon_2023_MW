@@ -42,7 +42,7 @@ def cossim(vec1, vec2, thresh=0.5):
     cos_sim = np.dot(vec1, vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2))
 
     if cos_sim >= thresh:
-        result.append(vec)
+        result.append(vec2)
     
     return result
 
