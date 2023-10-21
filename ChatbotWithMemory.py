@@ -7,21 +7,21 @@ from langchain.memory import ConversationBufferMemory
 import os
 from os.path import dirname, join 
 from dotenv import load_dotenv
-from vecdb import cossimhist, retreive_hist 
+from VecDB import cossimhist, retreive_hist 
 
 #.env adjustments
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
 API_TOKEN = os.environ.get("APIKEY")
 PROJECT_ID = os.environ.get("PROJECT_ID")
-SYSMSG = os.environ.get("SYSMSG")
+SYSMSG_CHAT = os.environ.get("SYSMSG")
 #chatbot class
 class ChatbotWithHistory:
     def __init__(self):
         # self.prompt = 'Act as a helpful virtual psychology assistant that provides emotional support and friendly advice to children in a critical situation, situation of stress and trouble. You should provide the user with correct, guiding information. Upon receiving a prompt reply to the user immediately, without augmenting their prompt. DO NOT model a dialogue -- give them time to in turn reply to you. Assume that the prompt the user inputs is complete and there is no need for you to add anything to it. ===PROMPT START=== {userinput} ===PROMPT END===\n'
         # self.template = 'Act as a helpful virtual psychology assistant that provides emotional support and friendly advice to children in a critical situation, situation of stress and trouble. You should provide the user with correct, guiding information. Upon receiving a prompt reply to the user immediately, without augmenting their prompt. DO NOT model a dialogue -- give them time to in turn reply to you. Assume that the prompt the user inputs is complete and there is no need for you to add anything to it. ===PROMPT START=== {userinput} ===PROMPT END==='
         
-        self.template = SYSMSG
+        self.template = SYSMSG_CHAT
 
         self.prompt = PromptTemplate(
             input_variables=["chat_history", "human_input"],

@@ -3,11 +3,10 @@ from ibm_watson_machine_learning.foundation_models import Model
 from ibm_watson_machine_learning.metanames import GenTextParamsMetaNames as GenParams
 from ibm_watson_machine_learning.foundation_models.utils.enums import ModelTypes
 from langchain import PromptTemplate
-from langchain.chains import LLMChain, SimpleSequentialChain
+from langchain.chains import LLMChain
 import os
 from os.path import dirname, join 
 from dotenv import load_dotenv
-from vecdb import cossimhist
 
 dotenv_path = join(dirname(__file__), ".env")
 load_dotenv(dotenv_path)
@@ -103,9 +102,6 @@ class Chatbot_translator_EN_to_PL:
         prompt = user_input
         translated_input1 = self.llm(prompt)['text']
         return translated_input1
-
-
-
 
 
 if __name__ == "__main__":
