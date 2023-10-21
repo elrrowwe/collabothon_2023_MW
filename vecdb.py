@@ -33,7 +33,7 @@ class VectorDatabase:
         # self.embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
 
         # self.embed_model = OpenAIEmbeddings(model="text-embedding-ada-002", openai_api_key=OPENAI_API)
-        
+
         self.embed_model = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
 
     def add_to_db(self, ind: str):
@@ -56,6 +56,17 @@ class VectorDatabase:
         
         return response
         
-def cossim(a, b):
-    cos_sim = np.dot(a, b)/(np.linalg.norm(a)*np.linalg.norm(b))
-    return abs(cos_sim) 
+def cossimhist(vec1, vec_dict:dict, thresh=0.5):
+    """
+    A function to calculate cosine similarity between a vector and a list of vectors.
+    Designed to take a vector and a list of vectors. 
+    Returns the n most similar vectors to the input one. 
+    """
+    embeddings = vec_dict.values()
+    n_vecs = []
+    for emb in embeddings:
+        cos_sim = np.dot(vec1, emb)/(np.linalg.norm(vec1)*np.linalg.norm(emb))
+        if cos_sim >= thresh:
+            n_vecs.append(emb)
+
+    return 

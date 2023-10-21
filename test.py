@@ -6,7 +6,7 @@ from langchain.chains import LLMChain, ConversationChain
 import os
 from os.path import dirname, join 
 from dotenv import load_dotenv
-from vecdb import VectorDatabase 
+from vecdb import cossimhist
 #W6hkUqzTQWcL6IVw
 
 #.env adjustments
@@ -17,8 +17,8 @@ PROJECT_ID = os.environ.get("PROJECT_ID")
 
 #1) empty vec db
 #2) append the first prompt + response {str: vector}
-#3) before each next prompt + response is sent to the model, we run cosine similarity between the prompt and the database
-#4) pick as many similarities as possible before filling out the context window OR hardcode a restriction in prompt length  (limit the user to n chars, the rest of the context window -- to be used for history)
+#3) before each next prompt + response is sent to the model, we run cosine similarity between the prompt and the database                    #500
+#4) pick as many similarities as possible before filling out the context window OR hardcode a restriction in prompt length (limit the user to n chars, the rest of the context window -- to be used for history)
 #5) after we pick the n top prompts + responses, pack them up into a prompt that says 'your last response to this prompt: prompt were such and such: response'
 #6) the model answers
 
@@ -43,7 +43,7 @@ class ChatbotWithHistory:
         self.generate_params = {
             GenParams.MIN_NEW_TOKENS: 10,
             GenParams.MAX_NEW_TOKENS: 250,
-            GenParams.TEMPERATURE: 0,
+            GenParams.TEMPERATURE: 0.0,
             GenParams.REPETITION_PENALTY: 1,
         }
 
@@ -58,12 +58,32 @@ class ChatbotWithHistory:
             project_id=PROJECT_ID
         )
         self.chain = ConversationChain(llm=self.model.to_langchain(), prompt=self.prompt, verbose=True, memory=self.memory)
-        self.vdb = VectorDatabase() #initializing a vector db for model memory
+        inp = {
+    "new_prompt" : {
+        "prompt" : str,
+        "vectorized_prompt" : list(int(str)) #embedded str
+    },
+    "history" : [
+        {
+            "prompt" : str,
+            "vectorized_prompt" : list(int(str)), #embedded str
+            "answer" : str
+        },
+        {
+            "prompt" : str,
+            "vectorized_prompt" : list(int(str)), #embedded str
+            "answer" : str
+        },
+        ...
+    ]
+}
 
-    #a function to get the model's response to some prompt 
-    def get_response(self, user_input):
+    #a function to get the model's response to some prompt + history 
+    def get_response(self, user_input:str, inp: dict):
+        last_prompt = inp['new_prompt']['prompt'] #str of the last prompt
         
-        prompt = user_input
+        #running cosine similarity on the whole  
+
         bot_response = self.llm_chain(human_input=prompt)
         return bot_response
 
@@ -71,5 +91,5 @@ class ChatbotWithHistory:
 if __name__ == "__main__":
     chatbot = ChatbotWithHistory()
 
-    response = chatbot.get_response('hey, my name is el. let`s talk')
+    response = chatbot('hey, my name is el. let`s talk')
     print(response)
