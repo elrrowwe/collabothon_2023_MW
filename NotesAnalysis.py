@@ -50,6 +50,9 @@ class NotesAnalyst():
 
         return analysis
     
+    def search(self, query:str):
+        
+
 if __name__ == '__main__':
     analyst  = NotesAnalyst()
     note = 'Today I felt quite happy. I talked to my friends at school and played with my big snow-white dog at home later. Mom cooked salmon for dinner and all of us (my parens, sister and me) ate at the table, while also talking about our day. It was nice.'

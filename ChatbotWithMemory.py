@@ -67,7 +67,7 @@ class ChatbotWithHistory:
             #running cosine similarity on the entire chat history to retreive the most relevant messages
             n_prompts_answers = cossimhist(last_prompt_emb, vec_dict=prev_prompts)
             
-            response = self.chain.predict({
+            response = self.chain({
             "chat_history": n_prompts_answers,
             "human_input": last_prompt_str})
         else:

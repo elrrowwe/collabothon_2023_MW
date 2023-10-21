@@ -42,6 +42,13 @@ def cossimhist(vec1, vec_dict:dict, thresh=0.5):
 
     return n_prompts_answers
 
+def cossim(vec1, vec2, thresh=0.5):
+    results = []
+    cos_sim = np.dot(vec1, vec2)/(np.linalg.norm(vec1)*np.linalg.norm(vec2))
+
+    if cos_sim >= thresh:
+        
+
 #a function to retreive all the previous prompts from some history 
 def retreive_hist(inp:dict):
     """
