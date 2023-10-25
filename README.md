@@ -5,7 +5,7 @@ This repo contains the ML part for a psychology Virtual Assistant app.
 The challenge was to create a virtual assistant that helps children and their parents to cope with stress, mental hardships. The core of our application is a chatbot, which provides assistance to the user, gives them instructions on how to deal with suicidal thoughts, panic attacks. 
 
 # Tech stack
-Both the ML and backend parts were written in Python, using watsonx.ai API, langchain, openai and Django respectively. The frontend part was written in HTML, CSS and JavaScript. MongoDB and PostreSQL were used as our databases.
+Both the ML and backend parts were written in Python, using watsonx.ai API, langchain, openai and Django respectively. The frontend part was written in HTML, CSS and JavaScript. MongoDB and PostgreSQL were used as our databases.
 
 # ML functionality 
 The model used (LLama2, 70B) was provided to us by the IBM WatsonX.ai API. In total, four models were used. For answering prompts: one for translating the input from a user (polish to english), one for generating a response for the translated input (the core model) and one for translating the previously generated response. For detecting the sentiment of prompts only one model was used; ultimately, it determined the behaviour of the core model based on the current message sentiment (the sentiment was detected continuously). Core model states included 'HAPPY', 'SAD', 'ANGRY', 'FRIENDLY' (a regular conversation). 
